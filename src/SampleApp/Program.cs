@@ -44,6 +44,7 @@ namespace SampleApp
 
                 Exception _ex = ex.InnerException;
 
+                // Read list of inner exception until no exception exists
                 while (_ex != null)
                 {
                     Console.WriteLine(_ex.Message);
