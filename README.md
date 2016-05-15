@@ -1,2 +1,15 @@
-# simplic-cdn-api-csharp
-Contains the .net/csharp api for accessing the simplic cdn
+Simplic CDN CSharp Driver
+===
+
+
+
+
+## Samples
+
+### Open a new connection
+
+### Write Data
+
+### Read Data
+
+
