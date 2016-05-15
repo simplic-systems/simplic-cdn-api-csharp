@@ -199,7 +199,8 @@ namespace Simplic.CDN.CSharp
         /// <returns>Ping result as string</returns>
         public string Ping()
         {
-            return PingAsync().Result;
+            return Task.Run(() => PingAsync()).Result;
+
         }
 
         /// <summary>
@@ -221,7 +222,7 @@ namespace Simplic.CDN.CSharp
         /// <returns>Returns true if connecting was successfull</returns>
         public bool Connect(string userName, string password)
         {
-            return ConnectAsync(userName, password).Result;
+            return Task.Run(() => ConnectAsync(userName, password)).Result;
         }
 
         /// <summary>
@@ -263,7 +264,7 @@ namespace Simplic.CDN.CSharp
         /// <returns>Result of the write data process</returns>
         public Model.SaveBlobResultModel WriteData(string path, byte[] data)
         {
-            return WriteDataAsync(path, data).Result;
+            return Task.Run(() => WriteDataAsync(path, data)).Result;
         }
 
         /// <summary>
@@ -290,7 +291,7 @@ namespace Simplic.CDN.CSharp
         /// <returns>Data which are located under the specific path</returns>
         public byte[] ReadData(string path)
         {
-            return ReadDataAsync(path).Result;
+            return Task.Run(() => ReadDataAsync(path)).Result;
         }
 
         /// <summary>
