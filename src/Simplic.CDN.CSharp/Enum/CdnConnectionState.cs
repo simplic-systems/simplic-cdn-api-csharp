@@ -14,16 +14,11 @@ namespace Simplic.CDN.CSharp
         /// <summary>
         /// Not yet connected
         /// </summary>
-        NotConnected = 0,
+        NotAuthenticated = 0,
 
         /// <summary>
         /// Is currently connected
         /// </summary>
-        Connected = 1,
-
-        /// <summary>
-        /// Lost the current conenction
-        /// </summary>
-        ConnectionLost = 2
+        Authenticated = 1
     }
 }

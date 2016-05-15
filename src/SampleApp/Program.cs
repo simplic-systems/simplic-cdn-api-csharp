@@ -11,26 +11,43 @@ namespace SampleApp
     {
         static void Main(string[] args)
         {
-            // Create a new connection
-            using (var cdn = new Cdn("http://localhost:50121/api/v1-0/"))
+            try
             {
-                // Ping the server
-                Console.WriteLine("Ping: " + cdn.Ping());
-
-                // Try to connect
-                if (cdn.Connect("UnitTestUser", "UnitTestPassword"))
+                // Create a new connection
+                using (var cdn = new Cdn("http://localhost:50121/api/v1-0/"))
                 {
-                    Console.WriteLine($"Connected with cdn service: {cdn.Url}");
+                    // Ping the server
+                    Console.WriteLine("Ping: " + cdn.Ping());
 
-                    // Write data
-                    cdn.WriteData("sample.data", new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+                    // Try to connect
+                    if (cdn.Connect("UnitTestUser", "UnitTestPassword"))
+                    {
+                        Console.WriteLine($"Connected with cdn service: {cdn.Url}");
 
-                    // Read data
-                    var data = cdn.ReadData("sample.data");
+                        // Write data
+                        cdn.WriteData("sample.data", new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+
+                        // Read data
+                        var data = cdn.ReadData("sample.data");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Could not connect to: {cdn.Url}");
+                    }
                 }
-                else
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Something went wrong... ");
+
+                Console.WriteLine(ex.Message);
+
+                Exception _ex = ex.InnerException;
+
+                while (_ex != null)
                 {
-                    Console.WriteLine($"Could not connect to: {cdn.Url}");
+                    Console.WriteLine(_ex.Message);
+                    _ex = _ex.InnerException;
                 }
             }
 

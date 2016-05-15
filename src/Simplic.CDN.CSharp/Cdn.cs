@@ -29,7 +29,7 @@ namespace Simplic.CDN.CSharp
         /// </summary>
         public Cdn()
         {
-            state = CdnConnectionState.NotConnected;
+            state = CdnConnectionState.NotAuthenticated;
         }
 
         /// <summary>
@@ -44,14 +44,34 @@ namespace Simplic.CDN.CSharp
 
         #region Private Methods
         /// <summary>
-        /// Complete url with ending slash
+        /// Generate an exception from an unseccessfull response
         /// </summary>
-        /// <param name="controller">Name of the controller</param>
-        /// <param name="action">Name of the action</param>
-        /// <returns>Complete and valid url</returns>
-        private string BuildUrl(string controller, string action)
+        /// <param name="response"></param>
+        /// <returns></returns>
+        private async Task<Exception> GenerateInvalidResponseException(HttpResponseMessage response)
         {
-            return $"{(url.EndsWith("/") ? url : url + "/")}{controller}/{action}";
+            if (!response.IsSuccessStatusCode)
+            {
+                if (response.StatusCode == System.Net.HttpStatusCode.NonAuthoritativeInformation ||
+                    response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    token = null;
+                    state = CdnConnectionState.NotAuthenticated;
+                }
+
+                try
+                {
+                    var jsonResult = await response.Content.ReadAsStringAsync();
+                    var info = Newtonsoft.Json.JsonConvert.DeserializeObject<Model.InterfaceExceptionInformation>(jsonResult);
+
+                    return new InterfaceException(info.Message + "\r\n" + info.ExceptionMessage, info.ErrorCode, (int)response.StatusCode);
+                }
+                catch { /* We just tried some thing, but when this failed to nothing... */}
+
+                return new Exception($"Exception: {await response.Content.ReadAsStringAsync()} @ HttpStatus {response.StatusCode}");
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -82,7 +102,7 @@ namespace Simplic.CDN.CSharp
         {
             using (var client = GetHttpClient())
             {
-                if (state == CdnConnectionState.Connected)
+                if (state == CdnConnectionState.Authenticated)
                 {
                     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("jwt", token);
                 }
@@ -98,7 +118,7 @@ namespace Simplic.CDN.CSharp
                 }
                 else
                 {
-                    throw new Exception(await response.Content.ReadAsStringAsync() + " Status code: " + response.StatusCode);
+                    throw await GenerateInvalidResponseException(response);
                 }
             }
         }
@@ -115,7 +135,7 @@ namespace Simplic.CDN.CSharp
         {
             using (HttpClient client = GetHttpClient())
             {
-                if (state == CdnConnectionState.Connected)
+                if (state == CdnConnectionState.Authenticated)
                 {
                     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("jwt", token);
                 }
@@ -131,15 +151,14 @@ namespace Simplic.CDN.CSharp
                 }
                 else
                 {
-                    throw new Exception(await response.Content.ReadAsStringAsync() + " Status code: " + response.StatusCode);
+                    throw await GenerateInvalidResponseException(response);
                 }
             }
         }
 
         /// <summary>
-        /// Send an asnyc get request to the cdn service
+        /// Send an asnyc get request to the cdn service and return raw binary (must convert internally as base64)
         /// </summary>
-        /// <typeparam name="R">Type of the expected result</typeparam>
         /// <param name="controller">Name of the controller, e.g. auth</param>
         /// <param name="action">Name of the action in the controller, e.g. login</param>
         /// <param name="parameter">Additional url parameter. e.g. /1</param>
@@ -148,7 +167,7 @@ namespace Simplic.CDN.CSharp
         {
             using (HttpClient client = new HttpClient())
             {
-                if (state == CdnConnectionState.Connected)
+                if (state == CdnConnectionState.Authenticated)
                 {
                     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("jwt", token);
                 }
@@ -165,7 +184,7 @@ namespace Simplic.CDN.CSharp
                 }
                 else
                 {
-                    throw new Exception(await response.Content.ReadAsStringAsync() + " Status code: " + response.StatusCode);
+                    throw await GenerateInvalidResponseException(response);
                 }
             }
         }
@@ -214,7 +233,7 @@ namespace Simplic.CDN.CSharp
         public async Task<bool> ConnectAsync(string userName, string password)
         {
             token = null;
-            state = CdnConnectionState.NotConnected;
+            state = CdnConnectionState.NotAuthenticated;
 
             // Call login method
             var result = await PostAsync<Model.LoginResult, Model.LoginModel>("auth", "login", new Model.LoginModel()
@@ -227,7 +246,7 @@ namespace Simplic.CDN.CSharp
             if (result != null && !string.IsNullOrWhiteSpace(result.Token))
             {
                 token = result.Token;
-                state = CdnConnectionState.Connected;
+                state = CdnConnectionState.Authenticated;
                 return true;
             }
 
@@ -236,11 +255,23 @@ namespace Simplic.CDN.CSharp
         #endregion
 
         #region [WriteData]
+        /// <summary>
+        /// Write data to the simplic cdn
+        /// </summary>
+        /// <param name="path">Path of the data, must not contains slash, just chars that are allowed in a file name</param>
+        /// <param name="data">Data to write as binary</param>
+        /// <returns>Result of the write data process</returns>
         public Model.SaveBlobResultModel WriteData(string path, byte[] data)
         {
             return WriteDataAsync(path, data).Result;
         }
 
+        /// <summary>
+        /// Write data to the simplic cdn async
+        /// </summary>
+        /// <param name="path">Path of the data, must not contains slashs, just chars that are allowed in a file name</param>
+        /// <param name="data">Data to write as binary</param>
+        /// <returns>Result of the write data process</returns>
         public async Task<Model.SaveBlobResultModel> WriteDataAsync(string path, byte[] data)
         {
             return await PostAsync<Model.SaveBlobResultModel, Model.SaveBlobModel>("cdn", "set", new Model.SaveBlobModel()
@@ -252,11 +283,21 @@ namespace Simplic.CDN.CSharp
         #endregion
 
         #region [ReadData]
+        /// <summary>
+        /// Read data from a simplic cdn service.
+        /// </summary>
+        /// <param name="path">Path of the data, must not contains slashs, just chars that are allowed in a file name</param>
+        /// <returns>Data which are located under the specific path</returns>
         public byte[] ReadData(string path)
         {
             return ReadDataAsync(path).Result;
         }
 
+        /// <summary>
+        /// Read data from a simplic cdn service async.
+        /// </summary>
+        /// <param name="path">Path of the data, must not contains slashs, just chars that are allowed in a file name</param>
+        /// <returns>Data which are located under the specific path</returns>
         public async Task<byte[]> ReadDataAsync(string path)
         {
             return await GetAsByteArrayAsync("cdn", "getraw", $"?path={path}");
@@ -269,7 +310,7 @@ namespace Simplic.CDN.CSharp
         /// </summary>
         public void Dispose()
         {
-            state = CdnConnectionState.NotConnected;
+            state = CdnConnectionState.NotAuthenticated;
             token = null;
         }
         #endregion
