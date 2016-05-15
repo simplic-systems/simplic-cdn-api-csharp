@@ -13,7 +13,7 @@ This is a sample how to use the api.
 
 ### Open a new connection
 
-For opening a new connection, just create a `Cdn` instance and pass and url.
+For opening a new connection, just create a `Cdn` instance and pass an url.
 
 ```csharp
 using (var cdn = new Cdn("http://localhost:50121/api/v1-0/"))
@@ -23,7 +23,7 @@ using (var cdn = new Cdn("http://localhost:50121/api/v1-0/"))
 }
 ```
 
-If you want to test the connection, just `Ping()` it.
+If you want to test the connection, `Ping()` it.
 
 Now we need to authenticate to do further things:
 
