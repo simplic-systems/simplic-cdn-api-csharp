@@ -213,6 +213,27 @@ namespace Simplic.CDN.CSharp
         }
         #endregion
 
+        #region [GetLog]
+        /// <summary>
+        /// Get logging information
+        /// </summary>
+        /// <returns>Logging information</returns>
+        public Model.LogContent GetLog()
+        {
+            return Task.Run(() => GetLogAsync()).Result;
+
+        }
+
+        /// <summary>
+        /// Get logging information async
+        /// </summary>
+        /// <returns>PLogging information</returns>
+        public async Task<Model.LogContent> GetLogAsync()
+        {
+            return (await GetAsync<Model.LogContent>("log", "get", ""));
+        }
+        #endregion
+
         #region [Connect]
         /// <summary>
         /// Establish a new connection to a simplic cdn service

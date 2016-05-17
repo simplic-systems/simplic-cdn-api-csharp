@@ -53,6 +53,7 @@
     <Compile Include="Enum\CdnConnectionState.cs" />
     <Compile Include="Exception\InterfaceException.cs" />
     <Compile Include="Model\InterfaceExceptionInformation.cs" />
+    <Compile Include="Model\LogContent.cs" />
     <Compile Include="Model\SaveBlobModel.cs" />
     <Compile Include="Model\SaveBlobResultModel.cs" />
     <Compile Include="Model\Login.cs" />
