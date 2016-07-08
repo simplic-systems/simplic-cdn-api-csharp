@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>EDV-Systeme Spiegelburg GmbH</authors>
+    <owners>$author$</owners>
+    <licenseUrl>https://raw.githubusercontent.com/simplic-systems/simplic-cdn-api-csharp/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/simplic-systems/simplic-cdn-api-csharp</projectUrl>
+    <iconUrl>http://simplic.biz/favicon.ico</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <releaseNotes>Summary of changes made in this release of the package.</releaseNotes>
+    <copyright>Copyright 2016</copyright>
+    <tags>CDN Simplic Simplic-Systems</tags>
+  </metadata>
+</package>
