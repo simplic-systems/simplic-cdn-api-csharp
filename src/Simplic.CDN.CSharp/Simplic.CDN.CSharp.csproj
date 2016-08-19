@@ -54,7 +54,6 @@
     <Compile Include="Exception\InterfaceException.cs" />
     <Compile Include="Model\InterfaceExceptionInformation.cs" />
     <Compile Include="Model\LogContent.cs" />
-    <Compile Include="Model\SaveBlobModel.cs" />
     <Compile Include="Model\SaveBlobResultModel.cs" />
     <Compile Include="Model\Login.cs" />
     <Compile Include="Model\LoginResult.cs" />
@@ -65,7 +64,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\.nuget\NuGet.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

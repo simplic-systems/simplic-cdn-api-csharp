@@ -1,6 +1,7 @@
 ﻿using Simplic.CDN.CSharp;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,8 +25,11 @@ namespace SampleApp
                     {
                         Console.WriteLine($"Connected with cdn service: {cdn.Url}");
 
-                        // Write data
-                        cdn.WriteData("sample.data", new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+                        using (var stream = new MemoryStream(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }))
+                        {
+                            // Write data
+                            cdn.WriteData("sample.data", stream);
+                        }
 
                         // Read data
                         var data = cdn.ReadData("sample.data");

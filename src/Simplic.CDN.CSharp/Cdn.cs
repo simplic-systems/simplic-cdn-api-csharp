@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -77,14 +78,18 @@ namespace Simplic.CDN.CSharp
         /// <summary>
         /// Get new http client instance
         /// </summary>
+        /// <param name="setJsonContentType">Set default json content-type</param>
         /// <returns>Instance of a http client</returns>
-        private HttpClient GetHttpClient()
+        private HttpClient GetHttpClient(bool setJsonContentType = true)
         {
             var client = new HttpClient();
             client.BaseAddress = new Uri(url.EndsWith("/") ? url : url + "/");
 
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            if (setJsonContentType)
+            {
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            }
 
             return client;
         }
@@ -124,6 +129,50 @@ namespace Simplic.CDN.CSharp
         }
 
         /// <summary>
+        /// Post multipart content
+        /// </summary>
+        /// <typeparam name="R">Expected result type</typeparam>
+        /// <param name="controller">Action name</param>
+        /// <param name="action">Controller anme</param>
+        /// <param name="path">Binary/stream path</param>
+        /// <param name="stream">Stream to send</param>
+        /// <returns>Expected returnvalue or exception will be thrown</returns>
+        private async Task<R> PostMultipartAsync<R>(string controller, string action, string path, Stream stream)
+        {
+            using (var client = GetHttpClient())
+            {
+                if (state == CdnConnectionState.Authenticated)
+                {
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("jwt", token);
+                }
+
+                // Create multipart content
+                using (var content = new MultipartFormDataContent())
+                {
+                    var fileContent = new StreamContent(stream);
+                    fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
+                    {
+                        FileName = path
+                    };
+                    content.Add(fileContent);
+
+                    var response = client.PostAsync($"{controller}/{action}", content).Result;
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        // Get json and parse
+                        var jsonResult = await response.Content.ReadAsStringAsync();
+                        return Newtonsoft.Json.JsonConvert.DeserializeObject<R>(jsonResult);
+                    }
+                    else
+                    {
+                        throw await GenerateInvalidResponseException(response);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Send an asnyc get request to the cdn service
         /// </summary>
         /// <typeparam name="R">Type of the expected result</typeparam>
@@ -157,13 +206,13 @@ namespace Simplic.CDN.CSharp
         }
 
         /// <summary>
-        /// Send an asnyc get request to the cdn service and return raw binary (must convert internally as base64)
+        /// Send an asnyc get request to the cdn service and return raw stream/binary (must convert internally as base64)
         /// </summary>
         /// <param name="controller">Name of the controller, e.g. auth</param>
         /// <param name="action">Name of the action in the controller, e.g. login</param>
         /// <param name="parameter">Additional url parameter. e.g. /1</param>
         /// <returns>Result of the get request as poco</returns>
-        private async Task<byte[]> GetAsByteArrayAsync(string controller, string action, string parameter)
+        private async Task<Stream> GetAsStreamAsync(string controller, string action, string parameter)
         {
             using (HttpClient client = new HttpClient())
             {
@@ -180,7 +229,7 @@ namespace Simplic.CDN.CSharp
                 if (response.IsSuccessStatusCode)
                 {
                     // Get json and parse
-                    return await response.Content.ReadAsByteArrayAsync();
+                    return await response.Content.ReadAsStreamAsync();
                 }
                 else
                 {
@@ -281,11 +330,11 @@ namespace Simplic.CDN.CSharp
         /// Write data to the simplic cdn
         /// </summary>
         /// <param name="path">Path of the data, must not contains slash, just chars that are allowed in a file name</param>
-        /// <param name="data">Data to write as binary</param>
+        /// <param name="data">Data to write as stream</param>
         /// <returns>Result of the write data process</returns>
-        public Model.SaveBlobResultModel WriteData(string path, byte[] data)
+        public Model.SaveBlobResultModel WriteData(string path, Stream stream)
         {
-            return Task.Run(() => WriteDataAsync(path, data)).Result;
+            return Task.Run(() => WriteDataAsync(path, stream)).Result;
         }
 
         /// <summary>
@@ -294,13 +343,9 @@ namespace Simplic.CDN.CSharp
         /// <param name="path">Path of the data, must not contains slashs, just chars that are allowed in a file name</param>
         /// <param name="data">Data to write as binary</param>
         /// <returns>Result of the write data process</returns>
-        public async Task<Model.SaveBlobResultModel> WriteDataAsync(string path, byte[] data)
+        public async Task<Model.SaveBlobResultModel> WriteDataAsync(string path, Stream stream)
         {
-            return await PostAsync<Model.SaveBlobResultModel, Model.SaveBlobModel>("cdn", "set", new Model.SaveBlobModel()
-            {
-                Path = path,
-                Data = data
-            });
+            return await PostMultipartAsync<Model.SaveBlobResultModel>("cdn", "set", path, stream);
         }
         #endregion
 
@@ -310,7 +355,7 @@ namespace Simplic.CDN.CSharp
         /// </summary>
         /// <param name="path">Path of the data, must not contains slashs, just chars that are allowed in a file name</param>
         /// <returns>Data which are located under the specific path</returns>
-        public byte[] ReadData(string path)
+        public Stream ReadData(string path)
         {
             return Task.Run(() => ReadDataAsync(path)).Result;
         }
@@ -320,9 +365,9 @@ namespace Simplic.CDN.CSharp
         /// </summary>
         /// <param name="path">Path of the data, must not contains slashs, just chars that are allowed in a file name</param>
         /// <returns>Data which are located under the specific path</returns>
-        public async Task<byte[]> ReadDataAsync(string path)
+        public async Task<Stream> ReadDataAsync(string path)
         {
-            return await GetAsByteArrayAsync("cdn", "getraw", $"?path={path}");
+            return await GetAsStreamAsync("cdn", "getraw", $"?path={path}");
         }
         #endregion
 

@@ -49,7 +49,10 @@ To write data call the `WriteData` method:
 
 ```csharp
 // Write data
-cdn.WriteData("sample.data", new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+using (var stream = new MemoryStream(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }))
+{
+    cdn.WriteData("sample.data", stream);
+}
 ```
 
 
