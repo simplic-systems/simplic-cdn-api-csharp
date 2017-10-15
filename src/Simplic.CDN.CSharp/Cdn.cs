@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Simplic.CDN.CSharp.Model;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -381,6 +382,15 @@ namespace Simplic.CDN.CSharp
             token = null;
         }
         #endregion
+
+        /// <summary>
+        /// Gets all users
+        /// </summary>
+        /// <returns>A list of <see cref="UserModel"/> objects</returns>
+        public async Task<List<UserModel>> GetAllUsers()
+        {
+            return (await GetAsync<List<UserModel>>("UserAdmin", "GetAllUsers", ""));
+        }
 
         #endregion
 
