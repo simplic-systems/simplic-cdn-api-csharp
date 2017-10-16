@@ -1,4 +1,5 @@
-﻿using Simplic.CDN.CSharp.Model;
+﻿using Simplic.CDN.Common.Models;
+using Simplic.CDN.CSharp.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -238,6 +239,7 @@ namespace Simplic.CDN.CSharp
                 }
             }
         }
+
         #endregion
 
         #region Public Methods
@@ -390,6 +392,33 @@ namespace Simplic.CDN.CSharp
         public async Task<List<UserModel>> GetAllUsers()
         {
             return (await GetAsync<List<UserModel>>("UserAdmin", "GetAllUsers", ""));
+        }
+
+        /// <summary>
+        /// Adds a user
+        /// </summary>        
+        public async Task AddUser(UserModel userModel)
+        {            
+            // TODO: add exception handling, return proper error messages
+            await PostAsync<string, UserModel>("UserAdmin", "AddUser", userModel);            
+        }
+
+        /// <summary>
+        /// Update a user
+        /// </summary>        
+        public async Task UpdateUser(UserModel userModel)
+        {
+            // TODO: add exception handling, return proper error messages
+            await PostAsync<string, UserModel>("UserAdmin", $"UpdateUser?userName={userModel.UserName}", userModel);
+        }
+
+        /// <summary>
+        /// Delete a user
+        /// </summary>        
+        public async Task DeleteUser(UserModel userModel)
+        {
+            // TODO: add exception handling, return proper error messages
+            await PostAsync<string, UserModel>("UserAdmin", $"RemoveUser", userModel);
         }
 
         #endregion
