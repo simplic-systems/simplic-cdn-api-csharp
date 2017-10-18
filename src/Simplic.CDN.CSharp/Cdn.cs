@@ -389,36 +389,75 @@ namespace Simplic.CDN.CSharp
         /// Gets all users
         /// </summary>
         /// <returns>A list of <see cref="UserModel"/> objects</returns>
-        public async Task<List<UserModel>> GetAllUsers()
+        public async Task<List<AdminUserModel>> GetAllUsers()
         {
-            return (await GetAsync<List<UserModel>>("UserAdmin", "GetAllUsers", ""));
+            return (await GetAsync<List<AdminUserModel>>("UserAdmin", "GetAllUsers", ""));
         }
 
         /// <summary>
         /// Adds a user
         /// </summary>        
-        public async Task AddUser(UserModel userModel)
+        public async Task AddUser(AdminUserModel userModel)
         {            
             // TODO: add exception handling, return proper error messages
-            await PostAsync<string, UserModel>("UserAdmin", "AddUser", userModel);            
+            await PostAsync<string, AdminUserModel>("UserAdmin", "AddUser", userModel);            
         }
 
         /// <summary>
         /// Update a user
         /// </summary>        
-        public async Task UpdateUser(UserModel userModel)
+        public async Task UpdateUser(AdminUserModel userModel)
         {
             // TODO: add exception handling, return proper error messages
-            await PostAsync<string, UserModel>("UserAdmin", $"UpdateUser?userName={userModel.UserName}", userModel);
+            await PostAsync<string, AdminUserModel>("UserAdmin", $"UpdateUser?userName={userModel.UserName}", userModel);
         }
 
         /// <summary>
         /// Delete a user
         /// </summary>        
-        public async Task DeleteUser(UserModel userModel)
+        public async Task DeleteUser(AdminUserModel userModel)
         {
             // TODO: add exception handling, return proper error messages
-            await PostAsync<string, UserModel>("UserAdmin", $"RemoveUser", userModel);
+            await PostAsync<string, AdminUserModel>("UserAdmin", $"RemoveUser", userModel);
+        }
+
+        /// <summary>
+        /// Get the index configuration
+        /// </summary>
+        /// <returns>Configuration modek</returns>     
+        public async Task<AdminIndexModel> GetIndexingConfig()
+        {
+            // TODO: add exception handling, return proper error messages
+            return await GetAsync<AdminIndexModel>("IndexAdmin", "GetConfig", "");
+        }
+
+        /// <summary>
+        /// Update the indexing config
+        /// </summary>        
+        public async Task SetIndexingConfig(AdminIndexModel indexModel)
+        {
+            // TODO: add exception handling, return proper error messages
+            await PostAsync<string, AdminIndexModel>("IndexAdmin", "SaveConfig", indexModel);
+        }
+
+
+        /// <summary>
+        /// Get the index configuration
+        /// </summary>
+        /// <returns>Configuration modek</returns>     
+        public async Task<AdminCommunicationModel> GetCommunicationConfig()
+        {
+            // TODO: add exception handling, return proper error messages
+            return await GetAsync<AdminCommunicationModel>("CommunicationAdmin", "GetConfig", "");
+        }
+
+        /// <summary>
+        /// Update the indexing config
+        /// </summary>        
+        public async Task SetCommunicationConfig(AdminCommunicationModel adminCommunicationModel)
+        {
+            // TODO: add exception handling, return proper error messages
+            await PostAsync<string, AdminCommunicationModel>("CommunicationAdmin", "SetHttpConfig", adminCommunicationModel);
         }
 
         #endregion
