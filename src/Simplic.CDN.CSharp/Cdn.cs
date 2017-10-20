@@ -207,6 +207,8 @@ namespace Simplic.CDN.CSharp
             }
         }
 
+
+
         /// <summary>
         /// Send an asnyc get request to the cdn service and return raw stream/binary (must convert internally as base64)
         /// </summary>
@@ -238,6 +240,43 @@ namespace Simplic.CDN.CSharp
                     throw await GenerateInvalidResponseException(response);
                 }
             }
+        }
+
+        
+        /// <summary>
+        /// Send an asnyc get request to the cdn service
+        /// </summary>
+        /// <typeparam name="R">Type of the expected result</typeparam>
+        /// <param name="controller">Name of the controller, e.g. auth</param>
+        /// <param name="action">Name of the action in the controller, e.g. login</param>
+        /// <param name="parameter">Additional url parameter. e.g. /1</param>
+        /// <returns>Result of the get request as poco</returns>
+        private async Task<AdminStorageConfiguration> GetStorageAsync<R>(string controller, string action, string parameter)
+        {
+            // TODO: Finish this method.
+            // check this link https://stackoverflow.com/questions/11099466/using-a-custom-type-discriminator-to-tell-json-net-which-type-of-a-class-hierarc
+            using (HttpClient client = GetHttpClient())
+            {
+                if (state == CdnConnectionState.Authenticated)
+                {
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("jwt", token);
+                }
+
+                // Get response
+                var response = await client.GetAsync($"{controller}/{action}{parameter ?? ""}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Get json and parse
+                    var jsonResult = await response.Content.ReadAsStringAsync();
+                    //return Newtonsoft.Json.JsonConvert.DeserializeObject<R>(jsonResult);
+                }
+                else
+                {
+                    throw await GenerateInvalidResponseException(response);
+                }
+            }
+            return null;
         }
 
         #endregion
@@ -442,9 +481,9 @@ namespace Simplic.CDN.CSharp
 
 
         /// <summary>
-        /// Get the index configuration
+        /// Get the http configuration
         /// </summary>
-        /// <returns>Configuration modek</returns>     
+        /// <returns>Configuration model</returns>     
         public async Task<AdminCommunicationModel> GetCommunicationConfig()
         {
             // TODO: add exception handling, return proper error messages
@@ -452,12 +491,81 @@ namespace Simplic.CDN.CSharp
         }
 
         /// <summary>
-        /// Update the indexing config
+        /// Update the http config
         /// </summary>        
         public async Task SetCommunicationConfig(AdminCommunicationModel adminCommunicationModel)
         {
             // TODO: add exception handling, return proper error messages
             await PostAsync<string, AdminCommunicationModel>("CommunicationAdmin", "SetHttpConfig", adminCommunicationModel);
+        }
+
+        /// <summary>
+        /// Get the index configuration
+        /// </summary>
+        /// <returns>Configuration modek</returns>     
+        public async Task<AdminSecurityModel> GetSecurityConfig()
+        {
+            // TODO: add exception handling, return proper error messages
+            return await GetAsync<AdminSecurityModel>("SecurityAdmin", "GetConfig", "");
+        }
+
+        /// <summary>
+        /// Update the indexing config
+        /// </summary>        
+        public async Task SetSecurityConfig(AdminSecurityModel adminSecurityModel)
+        {
+            // TODO: add exception handling, return proper error messages
+            await PostAsync<string, AdminSecurityModel>("SecurityAdmin", "SetConfig", adminSecurityModel);
+        }
+
+        /// <summary>
+        /// Update the indexing config
+        /// </summary>        
+        public async Task SetCommunicationConfig(AdminSecurityModel adminSecurityModel)
+        {
+            // TODO: add exception handling, return proper error messages
+            await PostAsync<string, AdminSecurityModel>("SecurityAdmin", "SetConfig", adminSecurityModel);
+        }
+
+        /// <summary>
+        /// Get the index configuration
+        /// </summary>
+        /// <returns>Configuration modek</returns>     
+        public async Task<AdminGeneralSettingsModel> GetGeneralSettings()
+        {
+            // TODO: add exception handling, return proper error messages
+            return await GetAsync<AdminGeneralSettingsModel>("GeneralSettingsAdmin", "GetConfig", "");
+        }
+
+        /// <summary>
+        /// Update the indexing config
+        /// </summary>        
+        public async Task SetGeneralSettings(AdminGeneralSettingsModel adminGeneralSettingsModel)
+        {
+            // TODO: add exception handling, return proper error messages
+            await PostAsync<string, AdminGeneralSettingsModel>("GeneralSettingsAdmin", "SetConfig", adminGeneralSettingsModel);
+        }
+
+        /// <summary>
+        /// Get the index configuration
+        /// </summary>
+        /// <returns>Configuration modek</returns>     
+        public async Task<AdminStorageConfiguration> GetStorageSettings()
+        {
+            // TODO: add exception handling, return proper error messages
+
+            AdminStorageConfiguration returnValue = null;
+            try
+            {
+                returnValue = await GetAsync<AdminStorageConfiguration>("StorageAdmin", "GetConfig", "");
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+            return returnValue;
         }
 
         #endregion
