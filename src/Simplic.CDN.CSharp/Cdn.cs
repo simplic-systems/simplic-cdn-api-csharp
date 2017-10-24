@@ -1,4 +1,5 @@
-﻿using Simplic.CDN.Common.Models;
+﻿using Newtonsoft.Json;
+using Simplic.CDN.Common.Models;
 using Simplic.CDN.CSharp.Model;
 using System;
 using System.Collections.Generic;
@@ -253,29 +254,39 @@ namespace Simplic.CDN.CSharp
         /// <returns>Result of the get request as poco</returns>
         private async Task<AdminStorageConfiguration> GetStorageAsync<R>(string controller, string action, string parameter)
         {
-            // TODO: Finish this method.
-            // check this link https://stackoverflow.com/questions/11099466/using-a-custom-type-discriminator-to-tell-json-net-which-type-of-a-class-hierarc
-            using (HttpClient client = GetHttpClient())
-            {
-                if (state == CdnConnectionState.Authenticated)
+            try
+            {                
+                using (HttpClient client = GetHttpClient())
                 {
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("jwt", token);
-                }
+                    if (state == CdnConnectionState.Authenticated)
+                    {
+                        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("jwt", token);
+                    }
 
-                // Get response
-                var response = await client.GetAsync($"{controller}/{action}{parameter ?? ""}");
+                    // Get response
+                    var response = await client.GetAsync($"{controller}/{action}{parameter ?? ""}");
 
-                if (response.IsSuccessStatusCode)
-                {
-                    // Get json and parse
-                    var jsonResult = await response.Content.ReadAsStringAsync();
-                    //return Newtonsoft.Json.JsonConvert.DeserializeObject<R>(jsonResult);
-                }
-                else
-                {
-                    throw await GenerateInvalidResponseException(response);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        // Get json and parse
+                        var jsonResult = await response.Content.ReadAsStringAsync();
+                        //return Newtonsoft.Json.JsonConvert.DeserializeObject<R>(jsonResult);
+                        
+                        var obj = JsonConvert.DeserializeObject<AdminStorageConfiguration>(jsonResult);
+
+                        return obj;
+                    }
+                    else
+                    {
+                        throw await GenerateInvalidResponseException(response);
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+               
+            }
+
             return null;
         }
 
@@ -557,7 +568,7 @@ namespace Simplic.CDN.CSharp
             AdminStorageConfiguration returnValue = null;
             try
             {
-                returnValue = await GetAsync<AdminStorageConfiguration>("StorageAdmin", "GetConfig", "");
+                returnValue = await GetStorageAsync<AdminStorageConfiguration>("StorageAdmin", "GetConfig", "");
             }
             catch (Exception ex)
             {
@@ -566,6 +577,54 @@ namespace Simplic.CDN.CSharp
             }
 
             return returnValue;
+        }
+
+        /// <summary>
+        /// Add storage
+        /// </summary>        
+        public async Task AddStorage(AdminStorage storage)
+        {
+            try
+            {
+                await PostAsync<string, AdminStorage>("StorageAdmin", "AddStorage", storage);
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Update storage
+        /// </summary>        
+        public async Task UpdateStorage(AdminStorage storage)
+        {
+            try
+            {
+                await PostAsync<string, AdminStorage>("StorageAdmin", "UpdateStorage", storage);
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Update storage
+        /// </summary>        
+        public async Task DeleteStorage(AdminStorage storage)
+        {
+            try
+            {
+                await PostAsync<string, AdminStorage>("StorageAdmin", "DeleteStorage", storage);
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
         }
 
         #endregion
